@@ -11,5 +11,4 @@ target/
 *.ipr
 *.cmd
 mvnw
-*.md
 .mvn
