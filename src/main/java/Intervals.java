@@ -11,10 +11,16 @@ public class Intervals {
     private static final Map<String, Integer> accidentals;
     private static final String DEGREE = "degree";
     private static final String SEMITONES = "semitones";
-    private static final int NUM_OF_DEGREES = 7;
-    private static final int NUM_OF_SEMITONES = 12;
+    private static final int NUMBER_OF_DEGREES = 7;
+    private static final int NUMBER_OF_SEMITONES = 12;
 
-    private static boolean ascending = true;
+    private static final String ILLEGAL_NUMBER_OF_ELEMENTS = "Illegal number of elements in input array";
+    private static final String CANNOT_IDENTIFY_THE_INTERVAL = "Cannot identify the interval";
+    private static final String INVALID_NOTE = "Invalid note";
+    private static final String INVALID_INTERVAL = "Invalid interval";
+    private static final String INVALID_ORDER = "Invalid order";
+
+    private static boolean ascending;
 
     static {
         intervals = new HashMap<>();
@@ -100,7 +106,6 @@ public class Intervals {
                 Map.entry("b", -1),
                 Map.entry("bb", -2)
         );
-
     }
 
     public static String intervalConstruction(String[] args) {
@@ -153,25 +158,25 @@ public class Intervals {
 
     private static int getDegreeDifference(int firstDegree, int secondDegree) {
         int result = firstDegree - secondDegree + 1;
-        return result > 0 ? result : NUM_OF_DEGREES + result;
+        return result > 0 ? result : NUMBER_OF_DEGREES + result;
     }
 
     private static int getSemitonesDifference(int firstSemitones, int secondSemitones) {
         int result = firstSemitones - secondSemitones;
-        return result > 0 ? result : NUM_OF_SEMITONES + result;
+        return result > 0 ? result : NUMBER_OF_SEMITONES + result;
     }
 
     private static int getDegreeSummary(int firstDegree, int secondDegree) {
         int result = firstDegree + secondDegree - 1;
-        return result <= NUM_OF_DEGREES ? result : result % NUM_OF_DEGREES;
+        return result <= NUMBER_OF_DEGREES ? result : result - NUMBER_OF_DEGREES;
     }
 
     private static int getSemitonesSummary(int firstSemitones, int secondSemitones) {
         int result = firstSemitones + secondSemitones;
-        return result <= NUM_OF_SEMITONES ? result : result % NUM_OF_SEMITONES;
+        return result <= NUMBER_OF_SEMITONES ? result : result - NUMBER_OF_SEMITONES;
     }
-    
-    public static Integer getDegreeOfNote(String note) {
+
+    private static Integer getDegreeOfNote(String note) {
         String baseNote = note.length() == 1 ? note : String.valueOf(note.charAt(0));
         return notes.get(baseNote).get(DEGREE);
     }
@@ -198,7 +203,7 @@ public class Intervals {
         return intervals.get(interval).get(SEMITONES);
     }
 
-    public static String getNoteByDegreeAndSemitones(int degree, int semitones) {
+    private static String getNoteByDegreeAndSemitones(int degree, int semitones) {
         String baseNote = getNoteByDegree(degree);
         int baseNoteSemitones = getSemitonesOfNote(baseNote);
 
@@ -208,7 +213,7 @@ public class Intervals {
         return baseNote + accidental;
     }
 
-    public static String getNoteByDegree(int degree) {
+    private static String getNoteByDegree(int degree) {
         return notes.keySet()
                 .stream()
                 .filter(note -> getDegreeOfNote(note) == degree)
@@ -230,7 +235,7 @@ public class Intervals {
                 .filter(interval -> getDegreeOfInterval(interval) == degree)
                 .filter(interval -> getSemitonesOfInterval(interval) == semitones)
                 .findAny()
-                .orElseThrow(() -> new NoSuchElementException("Cannot identify the interval"));
+                .orElseThrow(() -> new NoSuchElementException(CANNOT_IDENTIFY_THE_INTERVAL));
     }
 
     private static void validateIntervalConstructionInput(String[] input) {
@@ -244,6 +249,8 @@ public class Intervals {
 
         if (input.length == 3) {
             validateOrder(input[2]);
+        } else {
+            ascending = true;
         }
     }
 
@@ -258,54 +265,52 @@ public class Intervals {
 
         if (input.length == 3) {
             validateOrder(input[2]);
+        } else {
+            ascending = true;
         }
     }
 
     public static void validateIntervalIdentificationNote(String note) {
         String notes = "^[A-G]";
         String accidentals = "(#|##|b|bb)?$";
-        String regex = notes + accidentals;
-        Pattern pattern = Pattern.compile(regex);
+        String fullNone = notes + accidentals;
+        Pattern pattern = Pattern.compile(fullNone);
         Matcher matcher = pattern.matcher(note);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException("incorrect note");
+            throw new IllegalArgumentException(INVALID_NOTE);
         }
     }
 
     private static void validateNumberOfElements(String[] input) {
         if (input.length < 2 || input.length > 3) {
-            throw new IllegalArgumentException("Illegal number of elements in input array");
+            throw new IllegalArgumentException(ILLEGAL_NUMBER_OF_ELEMENTS);
         }
     }
 
     private static void validateIntervalConstructionNote(String note) {
         String notes = "^[A-G]";
         String accidentals = "[#b]?$";
-        String regex = notes + accidentals;
-        Pattern pattern = Pattern.compile(regex);
+        String fullNone = notes + accidentals;
+        Pattern pattern = Pattern.compile(fullNone);
         Matcher matcher = pattern.matcher(note);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException("incorrect note");
+            throw new IllegalArgumentException(INVALID_NOTE);
         }
     }
 
     private static void validateInterval(String interval) {
         if (!intervals.containsKey(interval)) {
-            throw new IllegalArgumentException("incorrect interval");
+            throw new IllegalArgumentException(INVALID_INTERVAL);
         }
     }
 
     private static void validateOrder(String order) {
         switch (order) {
-            case "asc":
-                break;
-            case "dsc":
-                ascending = false;
-                break;
-            default:
-                throw new IllegalArgumentException("incorrect order");
+            case "asc" -> ascending = true;
+            case "dsc" -> ascending = false;
+            default -> throw new IllegalArgumentException(INVALID_ORDER);
         }
     }
 }
