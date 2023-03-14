@@ -16,9 +16,9 @@ public class Intervals {
 
     private static final String ILLEGAL_NUMBER_OF_ELEMENTS = "Illegal number of elements in input array";
     private static final String CANNOT_IDENTIFY_THE_INTERVAL = "Cannot identify the interval";
-    private static final String INVALID_NOTE = "Invalid note";
-    private static final String INVALID_INTERVAL = "Invalid interval";
-    private static final String INVALID_ORDER = "Invalid order";
+    private static final String CANNOT_IDENTIFY_THE_NOTE = "Cannot identify the note";
+    private static final String CANNOT_IDENTIFY_THE_ACCIDENTAL = "Cannot identify the accidental";
+    private static final String CANNOT_IDENTIFY_THE_ORDER = "Cannot identify the order";
 
     private static boolean ascending;
 
@@ -114,10 +114,10 @@ public class Intervals {
         String interval = args[0];
         String note = args[1];
 
-        int intervalDegree = getDegreeOfInterval(interval);
-        int intervalSemitones = getSemitonesOfInterval(interval);
-        int noteDegree = getDegreeOfNote(note);
-        int noteSemitones = getSemitonesOfNote(note);
+        int intervalDegree = getIntervalDegree(interval);
+        int intervalSemitones = getIntervalSemitones(interval);
+        int noteDegree = getNoteDegree(note);
+        int noteSemitones = getNoteSemitones(note);
 
         int resultDegree;
         int resultSemitones;
@@ -138,10 +138,10 @@ public class Intervals {
         String startNote = args[0];
         String endNote = args[1];
 
-        int startNoteDegree = getDegreeOfNote(startNote);
-        int startNoteSemitones = getSemitonesOfNote(startNote);
-        int endNoteDegree = getDegreeOfNote(endNote);
-        int endNoteSemitones = getSemitonesOfNote(endNote);
+        int startNoteDegree = getNoteDegree(startNote);
+        int startNoteSemitones = getNoteSemitones(startNote);
+        int endNoteDegree = getNoteDegree(endNote);
+        int endNoteSemitones = getNoteSemitones(endNote);
 
         int resultDegree;
         int resultSemitones;
@@ -176,36 +176,36 @@ public class Intervals {
         return result <= NUMBER_OF_SEMITONES ? result : result - NUMBER_OF_SEMITONES;
     }
 
-    private static Integer getDegreeOfNote(String note) {
+    private static Integer getNoteDegree(String note) {
         String baseNote = note.length() == 1 ? note : String.valueOf(note.charAt(0));
         return notes.get(baseNote).get(DEGREE);
     }
 
-    private static Integer getSemitonesOfNote(String note) {
+    private static Integer getNoteSemitones(String note) {
         String baseNote = note.length() == 1 ? note : String.valueOf(note.charAt(0));
         int baseNoteSemitones = notes.get(baseNote).get(SEMITONES);
 
         String accidental = note.substring(1);
-        int accidentalSemitones = getSemitonesOfAccidental(accidental);
+        int accidentalSemitones = getAccidentalSemitones(accidental);
 
         return baseNoteSemitones + accidentalSemitones;
     }
 
-    private static int getSemitonesOfAccidental(String accidental) {
-        return accidentals.get(accidental);
-    }
-
-    private static Integer getDegreeOfInterval(String interval) {
+    private static Integer getIntervalDegree(String interval) {
         return intervals.get(interval).get(DEGREE);
     }
 
-    private static Integer getSemitonesOfInterval(String interval) {
+    private static Integer getIntervalSemitones(String interval) {
         return intervals.get(interval).get(SEMITONES);
+    }
+
+    private static int getAccidentalSemitones(String accidental) {
+        return accidentals.get(accidental);
     }
 
     private static String getNoteByDegreeAndSemitones(int degree, int semitones) {
         String baseNote = getNoteByDegree(degree);
-        int baseNoteSemitones = getSemitonesOfNote(baseNote);
+        int baseNoteSemitones = getNoteSemitones(baseNote);
 
         int accidentalSemitones = semitones - baseNoteSemitones;
         String accidental = getAccidentalBySemitones(accidentalSemitones);
@@ -216,24 +216,24 @@ public class Intervals {
     private static String getNoteByDegree(int degree) {
         return notes.keySet()
                 .stream()
-                .filter(note -> getDegreeOfNote(note) == degree)
+                .filter(note -> getNoteDegree(note) == degree)
                 .findAny()
-                .orElseThrow(() -> new NoSuchElementException("there is no such note"));
+                .orElseThrow(() -> new NoSuchElementException(CANNOT_IDENTIFY_THE_NOTE));
     }
 
     private static String getAccidentalBySemitones(int semitones) {
         return accidentals.keySet()
                 .stream()
-                .filter(accidental -> getSemitonesOfAccidental(accidental) == semitones)
+                .filter(accidental -> getAccidentalSemitones(accidental) == semitones)
                 .findAny()
-                .orElseThrow(() -> new NoSuchElementException("there is no such accidental"));
+                .orElseThrow(() -> new NoSuchElementException(CANNOT_IDENTIFY_THE_ACCIDENTAL));
     }
 
     private static String getIntervalByDegreeAndSemitones(int degree, int semitones) {
         return intervals.keySet()
                 .stream()
-                .filter(interval -> getDegreeOfInterval(interval) == degree)
-                .filter(interval -> getSemitonesOfInterval(interval) == semitones)
+                .filter(interval -> getIntervalDegree(interval) == degree)
+                .filter(interval -> getIntervalSemitones(interval) == semitones)
                 .findAny()
                 .orElseThrow(() -> new NoSuchElementException(CANNOT_IDENTIFY_THE_INTERVAL));
     }
@@ -270,6 +270,12 @@ public class Intervals {
         }
     }
 
+    private static void validateNumberOfElements(String[] input) {
+        if (input.length < 2 || input.length > 3) {
+            throw new IllegalArgumentException(ILLEGAL_NUMBER_OF_ELEMENTS);
+        }
+    }
+
     public static void validateIntervalIdentificationNote(String note) {
         String notes = "^[A-G]";
         String accidentals = "(#|##|b|bb)?$";
@@ -278,13 +284,7 @@ public class Intervals {
         Matcher matcher = pattern.matcher(note);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException(INVALID_NOTE);
-        }
-    }
-
-    private static void validateNumberOfElements(String[] input) {
-        if (input.length < 2 || input.length > 3) {
-            throw new IllegalArgumentException(ILLEGAL_NUMBER_OF_ELEMENTS);
+            throw new IllegalArgumentException(CANNOT_IDENTIFY_THE_NOTE);
         }
     }
 
@@ -296,13 +296,13 @@ public class Intervals {
         Matcher matcher = pattern.matcher(note);
 
         if (!matcher.find()) {
-            throw new IllegalArgumentException(INVALID_NOTE);
+            throw new IllegalArgumentException(CANNOT_IDENTIFY_THE_NOTE);
         }
     }
 
     private static void validateInterval(String interval) {
         if (!intervals.containsKey(interval)) {
-            throw new IllegalArgumentException(INVALID_INTERVAL);
+            throw new IllegalArgumentException(CANNOT_IDENTIFY_THE_INTERVAL);
         }
     }
 
@@ -310,7 +310,7 @@ public class Intervals {
         switch (order) {
             case "asc" -> ascending = true;
             case "dsc" -> ascending = false;
-            default -> throw new IllegalArgumentException(INVALID_ORDER);
+            default -> throw new IllegalArgumentException(CANNOT_IDENTIFY_THE_ORDER);
         }
     }
 }
